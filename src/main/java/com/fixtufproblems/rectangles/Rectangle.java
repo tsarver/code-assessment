@@ -85,7 +85,6 @@ public class Rectangle {
 		if (null == prevPoint) {
 			throw new IllegalArgumentException("Rectangle cannot accept a null Point.");
 		}
-		Point firstPoint = prevPoint;
 		Point upperCorner = prevPoint;
 		Point lowerCorner = prevPoint;
 		while(iterator.hasNext()) {

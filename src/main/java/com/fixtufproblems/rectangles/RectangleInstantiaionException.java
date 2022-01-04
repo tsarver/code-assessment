@@ -5,6 +5,8 @@ package com.fixtufproblems.rectangles;
  */
 public class RectangleInstantiaionException extends Exception {
 
+	private static final long serialVersionUID = -8917426974210512737L;
+
 	public RectangleInstantiaionException() {
 		super();
 	}
