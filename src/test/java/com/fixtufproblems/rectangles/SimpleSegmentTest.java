@@ -1,8 +1,15 @@
 package com.fixtufproblems.rectangles;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
+import java.util.Collection;
+import java.util.Iterator;
 
 import org.junit.Test;
+
+import com.fixtufproblems.util.TestingHelper;
 
 public class SimpleSegmentTest {
 
@@ -80,10 +87,33 @@ public class SimpleSegmentTest {
 	@Test
 	public void testConstructor_notOnAnAxis() {
 		try {
-			SimpleSegment actResult = new SimpleSegment(new Point(2,4), new Point(3, 5));
-			fail("The Points to do not lie on a vertical or horizontal line.");
+			new SimpleSegment(new Point(2,4), new Point(3, 5));
+			fail("Constructor should fail: The Points to do not lie on a vertical or horizontal line.");
 		} catch (IllegalArgumentException iae) {
 			//succeed
+		}
+	}
+
+	/**
+	 * Execute a series of assertions to ensure that two collections of <tt>SimpleSegment</tt>'s are equal.
+	 * 
+	 * @param message the message prefix to use if an assertion fails
+	 * @param expected the expected segments, sorted
+	 * @param actual the actual segments, sorted
+	 */
+	protected static void compareOrderedSegments(String message, Collection<SimpleSegment> expected,
+			Collection<SimpleSegment> actual) {
+		//TODO add a closure to compareOrderedComparable so that the caller can add arbitrary code to the iteration
+		TestingHelper.compareOrderedComparable(message, "SimpleSegment", expected, actual);
+		//make sure that getPoints() works
+		Iterator<SimpleSegment> expIterator = expected.iterator();
+		Iterator<SimpleSegment> actIterator = actual.iterator();
+		int idx = 0;
+		while (expIterator.hasNext()) {
+			//Assume that getPoints() returns sorted points
+			PointTest.compareOrderedPoints(message + "getPoints() for segment " + idx + " is wrong.",
+					expIterator.next().getPoints(), actIterator.next().getPoints());
+			idx++;
 		}
 	}
 }

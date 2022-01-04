@@ -2,8 +2,11 @@ package com.fixtufproblems.rectangles;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * A Rectangle in the strictest sense. Each side is either horizontal or vertical.
@@ -51,6 +54,10 @@ public class Rectangle {
 		prevPoint = nextPoint;
 		nextPoint = this.getLowerLeft();
 		this.segments.add(new SimpleSegment(prevPoint, nextPoint));
+	}
+	
+	protected List<SimpleSegment> getSegments() {
+		return Collections.unmodifiableList(this.segments);
 	}
 
 	/**
@@ -125,26 +132,52 @@ public class Rectangle {
 		if (null == other) {
 			return null;
 		}
-		List<Intersection> result = new ArrayList<Intersection>();
+		//Avoid duplicates in the response
+		SortedSet<Intersection> sortedResult = new TreeSet<>();
 		//Assume neither has null segments and they are the same size
 		for(SimpleSegment thisSegment : this.segments) {
 			for (SimpleSegment otherSegment : other.segments) {
 				//They overlap only if they have the same orientation and on the same line
 				Intersection overlapSegment = thisSegment.overlaps(otherSegment);
 				if (null != overlapSegment) {
-					result.add(overlapSegment);
+					sortedResult.add(overlapSegment);
 					continue;
 				}
 				//They intersect only if they have different orientation
 				Point intersectPoint = thisSegment.intersects(otherSegment);
 				if (null != intersectPoint ) {
-					result.add(intersectPoint);
+					sortedResult.add(intersectPoint);
 				}				
 			}
 		}
-		if (result.isEmpty()) {
+		if (sortedResult.isEmpty()) {
 			return null;
 		}
+		//Now we need to remove points that are represented with segments
+		//These got added because a point from one segment lies on another perpendicular segment
+		final List<SimpleSegment> segments = new ArrayList<>(sortedResult.size());
+		final List<Point> points = new ArrayList<>(sortedResult.size());
+		for (Intersection thisInter : sortedResult) {
+			if (thisInter.isLineSegment()) {
+				segments.add((SimpleSegment) thisInter);
+			} else {
+				points.add((Point) thisInter);
+			}
+		}
+		for (SimpleSegment overlap : segments) {
+			//Assume that the "extra" points can only occur on the ends of the overlap, not in the middle.
+			for (Point overlapPoint : overlap.getPoints()) {
+				final Iterator<Point> iterPoints = points.iterator();
+				while(iterPoints.hasNext()) {
+					if (overlapPoint.equals(iterPoints.next())) {
+						iterPoints.remove();
+					}
+				}
+			}
+		}
+		List<Intersection> result = new ArrayList<>(segments.size() + points.size());
+		result.addAll(points);
+		result.addAll(segments);
 		return result;
 	}
 

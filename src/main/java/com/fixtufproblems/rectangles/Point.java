@@ -5,8 +5,9 @@ import java.util.List;
 
 /**
  * This is a point in 2D integer space. It is immutable.
+ * <br>Note that this has to be comparable to <tt>Intersection</tt> because it can be in a collection with them.
  */
-public class Point implements Comparable<Point>, Intersection {
+public class Point implements Comparable<Intersection>, Intersection {
 	
 	private int x,y;
 	
@@ -41,12 +42,17 @@ public class Point implements Comparable<Point>, Intersection {
 	 * @param other the other Rectangle
 	 * @return negative if this Rectangle is left or below the other one
 	 */
-	public int compareTo(Point other) {
-		if (null == other) {
+	public int compareTo(Intersection otherInter) {
+		if (null == otherInter) {
 			//Null always come first
 			//Chose not to throw an exception in this case
 			return Integer.MAX_VALUE;
 		}
+		if (otherInter.isLineSegment()) {
+			//Points always come before SimpleSegments
+			return Integer.MIN_VALUE;
+		}
+		Point other = (Point)otherInter;
 		final int xDiff = this.x - other.x;
 		if (0 != xDiff) {
 			return xDiff;

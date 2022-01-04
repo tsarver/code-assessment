@@ -4,8 +4,6 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -24,24 +22,51 @@ public class RectangleTest {
 		Rectangle actResult = createGoodRectangle(inpSide, inpBottom, inpFarSide, inpTop);
 		assertNotNull(actResult);
 		Point actPoint = actResult.getLowerLeft();
-		assertNotNull("The lower left point shouldn't be null.", actPoint);
 		final Point expLowerLeft = new Point(inpSide, inpBottom);
 		assertEquals("The lower left point is incorrect.", expLowerLeft, actPoint );
 		actPoint = actResult.getLowerRight();
-		assertNotNull("The lower right point shouldn't be null.", actPoint);
 		final Point expLowerRight = new Point(inpFarSide, inpBottom);
 		assertEquals("The lower right point is incorrect.", expLowerRight, actPoint );
 		actPoint = actResult.getUpperRight();
-		assertNotNull("The upper right point shouldn't be null.", actPoint);
 		final Point expUpperRight = new Point(inpFarSide, inpTop);
 		assertEquals("The upper right point is incorrect.", expUpperRight, actPoint );
 		actPoint = actResult.getUpperLeft();
-		assertNotNull("The upper left point shouldn't be null.", actPoint);
 		final Point expUpperLeft = new Point(inpSide, inpTop);
 		assertEquals("The upper left point is incorrect.", expUpperLeft, actPoint );
 		
 	}
-	
+		
+	@Test
+	public void testConstructor_Thorough() {
+		//Wrote this test because while debugging testIntersect_Overlap,
+		//found a rectangle with only one point
+		final int inpLeftSideX = 7;
+		final int inpBottomY = 7;
+		final int inpRightSideX = 14;
+		final int inpTopY = 12;
+		final Rectangle inpShouldBeGood = createGoodRectangle(inpLeftSideX, inpBottomY, inpRightSideX, inpTopY);
+		assertNotNull("Shouldn't be null.", inpShouldBeGood);
+		final Point actLowerLeft = inpShouldBeGood.getLowerLeft();
+		assertEquals("The lower left point is wrong.", new Point(inpLeftSideX, inpBottomY), actLowerLeft);
+		final Point actLowerRight = inpShouldBeGood.getLowerRight();
+		assertEquals("The lower left point is wrong.", new Point(inpRightSideX, inpBottomY), actLowerRight);
+		final Point actUpperRight = inpShouldBeGood.getUpperRight();
+		assertEquals("The upper right point is wrong.", new Point(inpRightSideX, inpTopY), actUpperRight);
+		final Point actUpperLeft = inpShouldBeGood.getUpperLeft();
+		assertEquals("The upper left point is wrong.", new Point(inpLeftSideX, inpTopY), actUpperLeft);
+		final List<SimpleSegment> actSegments = inpShouldBeGood.getSegments();
+		assertNotNull("The segment list shouldn't be null.", actSegments);
+		assertEquals("There should be 4 segments in a Rectangle.", 4, actSegments.size());
+		final SortedSet<SimpleSegment> expSortedSegments = sortSegments(new SimpleSegment[] {
+				new SimpleSegment(actLowerLeft, actLowerRight),
+				new SimpleSegment(actLowerRight, actUpperRight),
+				new SimpleSegment(actUpperRight, actUpperLeft),
+				new SimpleSegment(actUpperLeft, actLowerLeft)
+				});
+		final SortedSet<SimpleSegment> actSortedSegments = sortSegments((SimpleSegment[]) actSegments.toArray(new SimpleSegment[4]));
+		SimpleSegmentTest.compareOrderedSegments("Constructor Thorough", expSortedSegments, actSortedSegments);
+	}
+
 	/*
 	 * These are cases where a single vertex of rectangle A is contained inside other rectangle B.
 	 * Rectangle B receives the "intersection" message.
@@ -59,12 +84,12 @@ public class RectangleTest {
 		//normalize the results
 		List<Point> actSortedResult  = sortPointsIgnoreSegments(actResult);
 		final SortedSet<Point> expResult = sortPoints(new Point[] { new Point(8,6), new Point(12,8) });
-		compareOrderedPoints("UpperLeft Intersect", expResult, actSortedResult);
+		PointTest.compareOrderedPoints("UpperLeft Intersect", expResult, actSortedResult);
 		actResult = inpUpperLeft.intersection(inpLowerRight);
 		assertNotNull("LowerRight does intersect, but indicated that it does not.", actResult);
 		//normalize the results
 		actSortedResult  = sortPointsIgnoreSegments(actResult);
-		compareOrderedPoints("LowerRight Intersect", expResult, actSortedResult);
+		PointTest.compareOrderedPoints("LowerRight Intersect", expResult, actSortedResult);
 	}
 	
 	@Test
@@ -76,12 +101,12 @@ public class RectangleTest {
 		//normalize the results
 		List<Point> actSortedResult  = sortPointsIgnoreSegments(actResult);
 		final SortedSet<Point> expResult = sortPoints(new Point[] { new Point(8, 6), new Point(6, 8) });
-		compareOrderedPoints("UpperRight Intersect", expResult, actSortedResult);
+		PointTest.compareOrderedPoints("UpperRight Intersect", expResult, actSortedResult);
 		actResult = inpUpperRight.intersection(inpLowerLeft);
 		assertNotNull("LowerLeft does intersect, but indicated that it does not.", actResult);
 		//normalize the results
 		actSortedResult  = sortPointsIgnoreSegments(actResult);
-		compareOrderedPoints("LowerLeft Intersect", expResult, actSortedResult);
+		PointTest.compareOrderedPoints("LowerLeft Intersect", expResult, actSortedResult);
 	}
 
 	@Test
@@ -96,7 +121,7 @@ public class RectangleTest {
 		List<Point> actSortedResult  = sortPointsIgnoreSegments(actResult);
 		final SortedSet<Point> expResult = sortPoints(
 				new Point[] { new Point(2, 4), new Point(8, 4), new Point(2, 10), new Point(8, 10) });
-		compareOrderedPoints("OutsideTheBox Intersect", expResult, actSortedResult);
+		PointTest.compareOrderedPoints("OutsideTheBox Intersect", expResult, actSortedResult);
 	}
 
 	/*
@@ -104,13 +129,27 @@ public class RectangleTest {
 	 */
 	@Test
 	public void testIntersect_Overlap() {
-		final Rectangle inpTheBox = createGoodRectangle(2, 2, 12, 10);
+		final Rectangle inpTheBox = createGoodRectangle(2, 2, 10, 12);
 		final Rectangle inpOverlapBox = createGoodRectangle(7, 7, 14, 12);
 		final List<Intersection> actResult = inpTheBox.intersection(inpOverlapBox);
 		assertNotNull("Overlap does intersect, but indicated that it does not.", actResult);
 		//normalize the results
 		comparePointsAndSegments("Overlap Intersect", new Point[] { new Point(10, 7) },
 				new SimpleSegment[] {new SimpleSegment(new Point(7, 12), new Point(10, 12))}, actResult);
+	}
+	
+	@Test
+	public void testIntersect_SinglePoint() {
+		final Rectangle inpTheBox = createGoodRectangle(2, 2, 10, 12);
+		final Rectangle inpOverlapBox = createGoodRectangle(10, -4, 14, 2);
+		final List<Intersection> actResult = inpTheBox.intersection(inpOverlapBox);
+		assertNotNull("Overlap does intersect, but indicated that it does not.", actResult);
+		//normalize the results
+		final Point expResult = new Point(10, 2);
+		assertEquals("Should only return one result.", 1, actResult.size());
+		Intersection actFirstResult = actResult.get(0);
+		assertFalse("The result should be a Point.", actFirstResult.isLineSegment());
+		assertEquals("The overlapping point is incorect.", expResult, actFirstResult);
 	}
 
 	/*
@@ -129,10 +168,10 @@ public class RectangleTest {
 		}
 	}
 	
-	@SuppressWarnings("unused")
+	@SuppressWarnings({ "unused", "deprecation" })
 	//Ignore
 	public void testOutOfOrder1() {
-	
+		//This should probably be removed
 		Rectangle actResult = null;
 		final int inpBottom = 8;
 		final int inpSide = 4; //left side of the rectangle
@@ -178,29 +217,6 @@ public class RectangleTest {
 		return new TreeSet<SimpleSegment>(Arrays.asList(segments));
 	}
 	
-	/**
-	 * Use a series of assertions to ensure that the two collections of Points are the equal.
-	 * 
-	 * @param message the message prefix to use if an assertion fails
-	 * @param actual the actual results
-	 * @param expected the expected results
-	 */
-	protected static void compareOrderedPoints(String message, Collection<Point> expected, Collection<Point> actual) {
-		if (null == expected) {
-			assertNull(message + ": expected null.", actual);
-		}
-		assertEquals(message + ": returned the wrong number of results.", expected.size(), actual.size());
-		Iterator<Point> expIterator = expected.iterator();
-		Iterator<Point> actIterator = actual.iterator();
-		int idx = 0;
-		//Both iterators have to be the same size because we already checked it.
-		while (expIterator.hasNext()) {
-			assertEquals(message + ": The Point at position " + idx + " doesn't match expected.", 
-					expIterator.next(), actIterator.next());
-			idx++;
-		}
-	}
-
 	protected static void comparePointsAndSegments(String message, Point[] expPoints, SimpleSegment expSegments[],
 			List<Intersection> actResult) {
 		//sort the expected points
@@ -209,9 +225,10 @@ public class RectangleTest {
 		List<Point> actSortedPoints = sortPointsIgnoreSegments(actResult);
 		List<SimpleSegment> actSortedSegments = sortSegmentsIgnorePoints(actResult);
 		//Iterate expSortedPoints and actSortedPoints
+		PointTest.compareOrderedPoints(message, expSortedPoints, actSortedPoints);
 		
 		//Iterate expSortedSegments and actSortedSegments
-		
+		SimpleSegmentTest.compareOrderedSegments(message, expSortedSegments, actSortedSegments);
 	}
 
 	/**
@@ -219,16 +236,14 @@ public class RectangleTest {
 	 * @param intersections <tt>List&lt;Point&gt;</tt>, probably the result of <tt>Rectangle.intersections()</tt>
 	 * @return all of the single <tt>Point</tt>'s in the <tt>List</tt>, ignore any SimpleSegments
 	 */
-	public static List<Point> sortPointsIgnoreSegments(List<Intersection> intersections) {
+	protected static List<Point> sortPointsIgnoreSegments(List<Intersection> intersections) {
 		SortedSet<Point> sortedResult = new TreeSet<Point>();
 		for (Intersection thisOne : intersections) {
 			if (!thisOne.isLineSegment()) {
 				sortedResult.addAll(thisOne.getPoints());
 			}
 		}
-		List<Point> result = new ArrayList<Point>(sortedResult.size());
-		result.addAll(sortedResult);
-		return result;
+		return new ArrayList<Point>(sortedResult);
 	}
 	
 	protected static List<SimpleSegment> sortSegmentsIgnorePoints(List<Intersection> intersections) {
@@ -238,8 +253,6 @@ public class RectangleTest {
 				sortedResult.add((SimpleSegment)thisOne);
 			}
 		}
-		List<SimpleSegment> result = new ArrayList<SimpleSegment>(sortedResult.size());
-		result.addAll(sortedResult);
-		return result;
+		return new ArrayList<SimpleSegment>(sortedResult);
 	}
 }

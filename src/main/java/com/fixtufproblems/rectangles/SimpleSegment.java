@@ -12,7 +12,7 @@ import java.util.TreeSet;
  * This is a line segment that can only be either horizontal or vertical.
  *
  */
-public class SimpleSegment implements Comparable<SimpleSegment>, Intersection {
+public class SimpleSegment implements Comparable<Intersection>, Intersection {
 
 	//This ensures that the first one is either left of or below the second one
 	private List<Point> points = new ArrayList<>();
@@ -266,11 +266,13 @@ public class SimpleSegment implements Comparable<SimpleSegment>, Intersection {
 	}
 
 	@Override
-	public int compareTo(SimpleSegment other) {
-		if (null == other) {
+	public int compareTo(Intersection otherInter) {
+		if (null == otherInter || !(otherInter.isLineSegment())) {
 			//null's come first, by a long shot
+			//and Point's
 			return Integer.MAX_VALUE;
 		}
+		SimpleSegment other= (SimpleSegment) otherInter;
 		//If this is true, there's probably a coding problem
 		if (null == other.points || other.points.size() != this.points.size()) {
 			//logger.info("PROGRAMMER ERROR: No SimpleSegment should have null \"points\", or a size other than 2.");
