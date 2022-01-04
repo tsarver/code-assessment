@@ -67,6 +67,13 @@ public class RectangleTest {
 		SimpleSegmentTest.compareOrderedSegments("Constructor Thorough", expSortedSegments, actSortedSegments);
 	}
 
+	@Test
+	public void testContains_Success() {
+		final Rectangle inpOuter = createGoodRectangle(-10, -3, 5, 10);
+		final Rectangle inpInner = createGoodRectangle(-4, -1, 3, 7);
+		assertTrue("The outer Rectangle should contain the inner Rectangle.", inpOuter.contains(inpInner));
+	}
+	
 	/*
 	 * These are cases where a single vertex of rectangle A is contained inside other rectangle B.
 	 * Rectangle B receives the "intersection" message.
@@ -90,6 +97,9 @@ public class RectangleTest {
 		//normalize the results
 		actSortedResult  = sortPointsIgnoreSegments(actResult);
 		PointTest.compareOrderedPoints("LowerRight Intersect", expResult, actSortedResult);
+		//Just for grins
+		assertFalse("OutsideTheBox the upper Left rectangle should not contain the one to the Right.", inpUpperLeft.contains(inpLowerRight));
+		assertFalse("OutsideTheBox the lower Right rectangle should not contain the upper one.", inpLowerRight.contains(inpUpperLeft));
 	}
 	
 	@Test
@@ -107,6 +117,9 @@ public class RectangleTest {
 		//normalize the results
 		actSortedResult  = sortPointsIgnoreSegments(actResult);
 		PointTest.compareOrderedPoints("LowerLeft Intersect", expResult, actSortedResult);
+		//Just for grins
+		assertFalse("OutsideTheBox the upper Right rectangle should not contain the one to the left.", inpUpperRight.contains(inpLowerLeft));
+		assertFalse("OutsideTheBox the lower left rectangle should not contain the upper one.", inpLowerLeft.contains(inpUpperRight));
 	}
 
 	@Test
@@ -122,6 +135,9 @@ public class RectangleTest {
 		final SortedSet<Point> expResult = sortPoints(
 				new Point[] { new Point(2, 4), new Point(8, 4), new Point(2, 10), new Point(8, 10) });
 		PointTest.compareOrderedPoints("OutsideTheBox Intersect", expResult, actSortedResult);
+		//Just for grins
+		assertFalse("OutsideTheBox the upper rectangle should not contain the one to the left.", inpOutsideX.contains(inpOutsideY));
+		assertFalse("OutsideTheBox the left rectangle should not contain the lower.", inpOutsideY.contains(inpOutsideX));
 	}
 
 	/*
@@ -152,6 +168,51 @@ public class RectangleTest {
 		assertEquals("The overlapping point is incorect.", expResult, actFirstResult);
 	}
 
+	@Test
+	public void testAdjacent_PartialOverlapRight() throws Exception {
+		//Test adjacent with a partially overlapping segment
+		final int inp1RightX = 12;
+		final int inp1BottomY = -2;
+//		final Point inp1LowerRight = new Point(inp1RightX, inp1BottomY);
+		final Point inp1UpperRight = new Point(inp1RightX, 18);
+		final Point inp1LowerLeft = new Point(-3, inp1BottomY);
+		
+		final int inp2TopY = 10;
+		final int inp2BottomY = 5;
+		final Point inp2LowerLeft = new Point(inp1RightX, inp2BottomY);
+		final Point inp2UpperRight = new Point(21, inp2TopY);
+		
+		final Rectangle inpRect1 = new Rectangle(inp1LowerLeft, inp1UpperRight);
+		final Rectangle inpRect2 = new Rectangle(inp2LowerLeft, inp2UpperRight);
+		
+		assertTrue("The rectangles should be adjacent and overlap on the right side of the first Rectangle.",
+				inpRect1.adjacentTo(inpRect2));
+	}
+
+	//Test adjacent with a completely overlapping segment
+//	@Test
+//	public void testAdjacent_CompleteOverlapTop() throws Exception {
+//		fail("Adjacent: Complete Overlap on the Top");
+//	}
+
+	//Test adjacent with a partial segment that is 1 away from the other rectangle
+//	@Test
+//	public void testAdjacent_Partial1AwayLeft() throws Exception {
+//		fail("Partial 1-Away segment on the Left");
+//	}
+
+	//Test adjacent with a complete segment that is 1 away from the other rectangle
+//	@Test
+//	public void testAdjacent_Complete1AwayBottom() throws Exception {
+//		fail("Adjacent: Complete segment 1-away on the Bottom");
+//	}
+	
+	//Test adjacent and intersect on two identical rectangles
+//	@Test
+//	public void testAdjacent_Identical() throws Exception {
+//		fail("Adjacent and Intersect: 2 identical Rectangle's");
+//	}
+	
 	/*
 	 * Negative testing 
 	 ************************/
@@ -167,6 +228,16 @@ public class RectangleTest {
 			assertNull("The constructor should have thrown an exception.", actRectangle);
 		}
 	}
+	
+//	@Test
+//	public void testAdjacent_JustInside() throws Exception {
+//		fail("Test for a rectangle that intersects because one segment is adjacent to another, but interior");
+//	}
+	
+//	@Test
+//	public void testAdjacent_ShareVertex() {
+//		fail("Test for to rectangles that share a vertex, should return false.");
+//	}
 	
 	@SuppressWarnings({ "unused", "deprecation" })
 	//Ignore
@@ -187,7 +258,7 @@ public class RectangleTest {
 	}
 
 	/*
-	 * Helper functions
+	 * Helper methods
 	 *************************/
 
 	/**

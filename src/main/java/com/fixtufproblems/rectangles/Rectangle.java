@@ -122,10 +122,12 @@ public class Rectangle {
 
 	/**
 	 * Returns the points where the Rectangles intersect, or null if they don't intersect. If there is a segment
-	 * of one that overlaps a segment of the other, then the end points of the overlapping segment is returned
-	 * (not all points along the segment).
+	 * of one that overlaps a segment of the other, then a SimpleSegment of the overlapping segment is also returned.
+	 * <br>This is a symmetric operation: <tt>a.intersection(b) == b.intersection(a)</tt>
+	 * <br>and a reflexive operation: <tt>a.intersection(a) == true</tt> (returns all 4 line segments)
 	 * @param other the other Rectangle
-	 * @return the <tt>Point</tt>'s where <tt>this</tt> Rectangle intersects with the <tt>other</tt>,
+	 * @return the <tt>Point</tt>'s where <tt>this</tt> Rectangle intersects and the <tt>SimpleSegment</tt>'s
+	 * of overlapping line segments with the <tt>other</tt>,
 	 * or <tt>null</tt> if they don't intersect
 	 */
 	public List<Intersection> intersection(Rectangle other) {
@@ -181,22 +183,122 @@ public class Rectangle {
 		return result;
 	}
 
+	/**
+	 * This is a transitive operation: <tt> a.contains(b) && b.contains(c) ==> a.contains(c)</tt>
+	 * @param other another <tt>Rectangle</tt>
+	 * @return true if all vertices of the given Rectangle are strictly interior to this Rectangle (i.e., no overlapping segments)
+	 */
 	public boolean contains(Rectangle other) {
 		if (null == other) {
-			throw new IllegalArgumentException("Can't compare to a null Rectangle.");
+			throw new IllegalArgumentException("Can't compare containment to a null Rectangle.");
 		}
 		return other.getLowerLeft().bothLarger(this.getLowerLeft())
 			&& this.getUpperRight().bothLarger(other.getUpperRight());
 	}
 	
-	public boolean adjacent(Rectangle other) {
-		if (this.contains(other))  //TODO call simple intersect
+	/**
+	 * Two Rectangles are adjacent to each other if neither contains the other, and there exists at least one
+	 * line segment that overlaps (same points) or is adjacent to at least one line segment on the other Rectangle.
+	 * Here, "adjacent line segments" is defined as parallel to each other at a distance of 1. 
+	 * @param other another <tt>Rectangle</tt>
+	 * @return true if the other Rectangle is adjacent to this one
+	 * @throws IllegalArgumentException if <tt>other</tt> is null
+	 */
+	public boolean adjacentTo(Rectangle other) {
+		if (null == other) {
+			throw new IllegalArgumentException("Cannot compare adjacency with a null Rectangle.");
+		}
+		//Theoretically, we could just compare all segments, but "notInterior()" already went through the trouble...
+		final RelativeDirection relDirection = this.notInterior(other);
+		//This means that there is an intersection
+		if (relDirection == null) {
 			return false;
-		return false;
+		}
+		SimpleSegment closestSegments[] = getClosestSegments(other, relDirection);
+		if (null == closestSegments) {
+			return false;
+		}
+		return closestSegments[0].isAdjacent(closestSegments[1]);
 	}
 	
-	protected boolean contains(Point aPoint) {
-		return (null != aPoint) && aPoint.bothLarger(this.getLowerLeft())
-				&& this.getUpperRight().bothLarger(aPoint);
+	/**
+	 * Return the two parallel segments from "this" and "other", assuming that "other" is in the given direction.
+	 * 
+	 * @param other another <tt>Rectangle</tt>
+	 * @param direction the relative direction of <tt>other</tt> from <tt>this</tt>
+	 * @return an array of <tt>SimpleSegment</tt> where position 0 is from <tt>this</tt> and position 1 is from <tt>other</tt>,
+	 * 		or null if something went wrong
+	 */
+	protected SimpleSegment[] getClosestSegments(Rectangle other, RelativeDirection direction) {
+		if (null == other || null == direction) {
+			return null;
+		}
+		switch (direction) {
+			case ABOVE:
+				return new SimpleSegment[] { new SimpleSegment(this.getUpperLeft(), this.getUpperRight()),
+						new SimpleSegment(other.getLowerLeft(), other.getLowerRight())
+					};
+			case BELOW:
+				return new SimpleSegment[] { new SimpleSegment(this.getLowerLeft(), this.getLowerRight()),
+						new SimpleSegment(other.getUpperLeft(), other.getUpperRight())
+						};
+			case LEFT:
+				return new SimpleSegment[] { new SimpleSegment(this.getLowerLeft(), this.getUpperLeft()),
+						new SimpleSegment(other.getLowerRight(), other.getUpperRight())
+						};
+			case RIGHT:
+				return new SimpleSegment[] { new SimpleSegment(this.getLowerRight(), this.getUpperRight()),
+						new SimpleSegment(other.getLowerLeft(), other.getUpperLeft())
+						};
+			//This should never happen, unless someone adds another value to the enum
+			default:
+				//Logger.warn("PROGRAMMER ERROR: Someone added a value to Rectangle.RelativeDirection without updating getClosestSegment().");
+				return null;
+		}
+	}
+	
+//	protected boolean contains(Point aPoint) {
+//		return (null != aPoint) && aPoint.bothLarger(this.getLowerLeft())
+//				&& this.getUpperRight().bothLarger(aPoint);
+//	}
+	
+	/**
+	 * This is different from <tt>!contains(Rectangle)</tt> because it returns true if there are
+	 * overlapping line segments.
+	 * @param other another <tt>Rectangle</tt>
+	 * @return the <tt>RelativeDirection</tt> of the two Rectangles
+	 * @see RelativeDirection
+	 * @see #contains(Rectangle)
+	 */
+	protected RelativeDirection notInterior(Rectangle other) {
+		if (null == other)
+			return null;
+		if (other.getLowerLeft().getY() >= this.getUpperRight().getY())
+			return RelativeDirection.ABOVE;
+		if (other.getUpperRight().getX() <= this.getLowerLeft().getX())
+			return RelativeDirection.LEFT;
+		if (other.getUpperRight().getY() <= this.getLowerLeft().getY())
+			return RelativeDirection.BELOW;
+		if (other.getLowerLeft().getX() >= this.getUpperRight().getX())
+			return RelativeDirection.RIGHT;
+		//If we got here, something is really wrong
+		//Logger.warn("PROGRAMMER ERROR: The two rectangles are not in the same Euclidian plane.");
+		//TODO throw an IllegalArgumentException?
+		return null;
+	}
+	
+	/**
+	 * Describes the relationship between Rectangles, as in the following sentence.
+	 * <pre>
+	 * 	All vertices of "other" are &lt;RelativeDirection&gt; the vertices of "this"
+	 * </pre>
+	 * Allows for overlapping segments.
+	 *
+	 */
+	protected static enum RelativeDirection {
+		ABOVE,
+		BELOW, 
+		LEFT,
+		RIGHT;
 	}
 }

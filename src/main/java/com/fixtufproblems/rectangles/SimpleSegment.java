@@ -197,6 +197,27 @@ public class SimpleSegment implements Comparable<Intersection>, Intersection {
 		return null;
 	}
 	
+	public boolean isAdjacent(SimpleSegment other) {
+		//if other is null, or they aren't parallel
+		if (null == other || this.isHorizontal != other.isHorizontal) {
+			return false;
+		}
+		//if both are horizontal
+		if (this.isHorizontal && other.isHorizontal
+				//there is an overlapping vertex
+				&& ((other.getLowerPoint().getX() >= this.getLowerPoint().getX() && other.getLowerPoint().getX() <= this.getHigherPoint().getX())
+					|| other.getHigherPoint().getX() >= this.getLowerPoint().getX() && other.getHigherPoint().getX() <= this.getHigherPoint().getX())
+				) {
+			return Math.abs(this.getLowerPoint().getY() - other.getLowerPoint().getY()) <= 1;
+		}
+		//both are vertical
+		if ((other.getLowerPoint().getY() >= this.getLowerPoint().getY() && other.getLowerPoint().getY() <= this.getHigherPoint().getY())
+				|| other.getHigherPoint().getY() >= this.getLowerPoint().getY() && other.getHigherPoint().getY() <= this.getHigherPoint().getY()) {
+			return Math.abs(this.getLowerPoint().getX() - other.getLowerPoint().getX()) <= 1;
+		}
+		return false;
+	}
+	
 	/**
 	 * Returns the vertex that is shared between this segment and the <tt>other</tt>.
 	 * If there are two shared vertices, then the segments are equivalent.
