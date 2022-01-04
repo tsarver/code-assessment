@@ -10,9 +10,49 @@ import java.util.List;
  */
 public class Rectangle {
 	
-	private List<SimpleSegment> segments = new ArrayList<SimpleSegment>();
+	private List<SimpleSegment> segments = new ArrayList<SimpleSegment>(4);
 	private Point lowerLeft, upperRight;
 	
+	/**
+	 * Creates a Rectangle.
+	 * 
+	 * @param lowerLeft
+	 * @param upperRight
+	 * 
+	 * @throws IllegalArgumentException if either Point is null,
+	 * 	or <tt>upperRight</tt> is not actually up and to the right of <tt>lowerLeft</tt>
+	 */
+	protected Rectangle(Point lowerLeft, Point upperRight) {
+		if (null == lowerLeft || null == upperRight) {
+			throw new IllegalArgumentException("Cannot create a Rectangle from a null Point");
+		}
+		if (upperRight.equals(lowerLeft)) {
+			throw new IllegalArgumentException("Cannot create an empty Rectangle.");
+		}
+		if (!upperRight.bothLarger(lowerLeft)) {
+			throw new IllegalArgumentException("Cannot create the Rectangle because Point " + lowerLeft.toString()
+			+ " is not below and to the left of Point " + upperRight.toString());
+		}
+		this.lowerLeft = lowerLeft;
+		this.upperRight = upperRight;
+		initializeSegments();
+	}
+	
+	protected void initializeSegments() {
+		Point prevPoint = this.getLowerLeft();
+		Point nextPoint = this.getLowerRight();
+		this.segments.add(new SimpleSegment(prevPoint, nextPoint));
+		prevPoint = nextPoint;
+		nextPoint = this.getUpperRight();
+		this.segments.add(new SimpleSegment(prevPoint, nextPoint));
+		prevPoint = nextPoint;
+		nextPoint = this.getUpperLeft();
+		this.segments.add(new SimpleSegment(prevPoint, nextPoint));
+		prevPoint = nextPoint;
+		nextPoint = this.getLowerLeft();
+		this.segments.add(new SimpleSegment(prevPoint, nextPoint));
+	}
+
 	/**
 	 * Creates a Rectangle.
 	 * @param vertex1
@@ -20,48 +60,58 @@ public class Rectangle {
 	 * @param vertex3
 	 * @param vertex4
 	 * 
-	 * @throws IllegalArgumentException if the vertices do not define a path either clockwise or counter-clockwise,
-	 * and if line segments are not all parallel to either the x-axis or y-axis.
+	 * @throws IllegalArgumentException if line segments are not all parallel to either the x-axis or y-axis.
 	 */
+	@Deprecated
 	protected Rectangle(Point vertex1, Point vertex2, Point vertex3, Point vertex4) throws IllegalArgumentException {
 		this(Arrays.asList(new Point[] {vertex1, vertex2, vertex3, vertex4}));
 	}
 	
+	@Deprecated
 	protected Rectangle(List<Point> points) throws IllegalArgumentException {
 		if (null == points || 4 != points.size()) {
 			throw new IllegalArgumentException("The points can't be null and must be 4 in length.");
 		}
 		//Assume it is of length 4
 		Iterator<Point> iterator = points.iterator();
-//		Point prevPoint = iterator.next();
-//		Point firstPoint = prevPoint;
-		Point upperCorner = null, lowerCorner = null;
+		Point prevPoint = iterator.next();
+		if (null == prevPoint) {
+			throw new IllegalArgumentException("Rectangle cannot accept a null Point.");
+		}
+		Point firstPoint = prevPoint;
+		Point upperCorner = prevPoint;
+		Point lowerCorner = prevPoint;
 		while(iterator.hasNext()) {
 			Point nextPoint = iterator.next();
 			if (null == nextPoint) {
 				throw new IllegalArgumentException("Rectangle cannot accept a null Point.");
 			}
-			if (null != upperCorner) {
-				if (upperCorner.eitherSmaller(nextPoint)) {
-					upperCorner = nextPoint;
-				}
-			} else {
+			if (upperCorner.eitherSmaller(nextPoint)) {
 				upperCorner = nextPoint;
 			}
-			if (null != lowerCorner) {
-				if (nextPoint.eitherSmaller(lowerCorner)) {
-					lowerCorner = nextPoint;
-				}
-			} else {
+			if (nextPoint.eitherSmaller(lowerCorner)) {
 				lowerCorner = nextPoint;
 			}
-			//This does the checks for horizontal and vertical
-			//TODO maybe surround this try..catch and re-write the message
-//			this.segments.add(new SimpleSegment(prevPoint, nextPoint));
-//			prevPoint = nextPoint;
 		}
-//		this.segments.add(new SimpleSegment(prevPoint, firstPoint));
+		//TODO check for only horizontal and vertical segments
 	}
+	
+	protected Point getUpperRight() {
+		return this.upperRight;
+	}
+	
+	protected Point getLowerLeft() {
+		return this.lowerLeft;
+	}
+	
+	protected Point getUpperLeft() {
+		return new Point(this.lowerLeft.getX(), this.upperRight.getY());
+	}
+	
+	protected Point getLowerRight() {
+		return new Point(this.upperRight.getX(), this.lowerLeft.getY());
+	}
+
 
 	/**
 	 * Returns the points where the Rectangles intersect, or null if they don't intersect. If there is a segment
@@ -71,24 +121,49 @@ public class Rectangle {
 	 * @return the <tt>Point</tt>'s where <tt>this</tt> Rectangle intersects with the <tt>other</tt>,
 	 * or <tt>null</tt> if they don't intersect
 	 */
-	public Point [] intersects(Rectangle other) {
-		List<Point> result = new ArrayList<Point>();
-		//Get horizontal and vertical segments
-		List<Point> myHoriz = this.getHorizontalSegments();
-		List<Point> otherHoriz = other.getHorizontalSegments();
-		List<Point> myVertical = this.getVerticalSegments();
-		List<Point> otherVertical = other.getVerticalSegments();
-		//Compare verticals to horizontals
-		//Check for overlapping segments by comparing like to like
-		
-		return (Point[]) result.toArray();
+	public List<Intersection> intersection(Rectangle other) {
+		if (null == other) {
+			return null;
+		}
+		List<Intersection> result = new ArrayList<Intersection>();
+		//Assume neither has null segments and they are the same size
+		for(SimpleSegment thisSegment : this.segments) {
+			for (SimpleSegment otherSegment : other.segments) {
+				//They overlap only if they have the same orientation and on the same line
+				Intersection overlapSegment = thisSegment.overlaps(otherSegment);
+				if (null != overlapSegment) {
+					result.add(overlapSegment);
+					continue;
+				}
+				//They intersect only if they have different orientation
+				Point intersectPoint = thisSegment.intersects(otherSegment);
+				if (null != intersectPoint ) {
+					result.add(intersectPoint);
+				}				
+			}
+		}
+		if (result.isEmpty()) {
+			return null;
+		}
+		return result;
 	}
 
-	protected List<Point> getHorizontalSegments() {
-		return null;
+	public boolean contains(Rectangle other) {
+		if (null == other) {
+			throw new IllegalArgumentException("Can't compare to a null Rectangle.");
+		}
+		return other.getLowerLeft().bothLarger(this.getLowerLeft())
+			&& this.getUpperRight().bothLarger(other.getUpperRight());
 	}
 	
-	protected List<Point> getVerticalSegments() {
-		return null;
+	public boolean adjacent(Rectangle other) {
+		if (this.contains(other))  //TODO call simple intersect
+			return false;
+		return false;
+	}
+	
+	protected boolean contains(Point aPoint) {
+		return (null != aPoint) && aPoint.bothLarger(this.getLowerLeft())
+				&& this.getUpperRight().bothLarger(aPoint);
 	}
 }

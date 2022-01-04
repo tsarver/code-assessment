@@ -1,9 +1,12 @@
 package com.fixtufproblems.rectangles;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * This is a point in 2D integer space. It is immutable.
  */
-public class Point implements Comparable<Point> {
+public class Point implements Comparable<Point>, Intersection {
 	
 	private int x,y;
 	
@@ -19,6 +22,17 @@ public class Point implements Comparable<Point> {
 	public int getY() {
 		return this.y;
 	}
+	
+	@Override
+	public String toString() {
+		StringBuffer result = new StringBuffer(10);
+		result.append('[');
+		result.append(this.x);
+		result.append(", ");
+		result.append(this.y);
+		result.append(']');
+		return result.toString();
+	}
 
 	/**
 	 * Implements the ideal semantics in which the absolute value of the result is relative to how
@@ -33,11 +47,11 @@ public class Point implements Comparable<Point> {
 			//Chose not to throw an exception in this case
 			return Integer.MAX_VALUE;
 		}
-		final int xDiff = other.x - this.x;
+		final int xDiff = this.x - other.x;
 		if (0 != xDiff) {
 			return xDiff;
 		}
-		final int yDiff = other.y - this.y;
+		final int yDiff = this.y - other.y;
 		if (0 != yDiff) {
 			return yDiff;
 		}
@@ -49,10 +63,7 @@ public class Point implements Comparable<Point> {
 	
 	@Override
 	public boolean equals(Object otherObj) {
-		if (null == otherObj) {
-			return false;
-		}
-		if (!(otherObj instanceof Point)) {
+		if (null == otherObj || !(otherObj instanceof Point)) {
 			return false;
 		}
 		Point other = (Point)otherObj;
@@ -62,23 +73,46 @@ public class Point implements Comparable<Point> {
 	/**
 	 * 
 	 * @param other another Point, not null
-	 * @return true if the given Point is up and to the right of this one.
+	 * @return true if this Point is up and to the right of the given one.
 	 */
 	public boolean bothLarger(Point other) {
 		if (null == other)
 			return false;
-		return this.getX() < other.getX() && this.getY() < other.getY();
+		return this.getX() > other.getX() && this.getY() > other.getY();
 		
 	}
 
 	/**
 	 * 
 	 * @param other another Point, not null
-	 * @return true if the given point is down or to the left of this one.
+	 * @return true if this Point point is down <b>OR</b> to the left of the given one.
 	 */
 	public boolean eitherSmaller(Point other) {
 		if (null == other)
 			return false;
-		return other.getX() < this.getX() || other.getY() < this.getY();
+		return other.getX() > this.getX() || other.getY() > this.getY();
+	}
+	
+	/**
+	 * 
+	 * @param other another Point, not null
+	 * @return true if this Point is above and to the right of the given Point
+	 */
+	public boolean toUpperRight(Point other) {
+		if (null == other)
+			return false;
+		return other.getX() < this.getX() && other.getY()  < this.getY();
+	}
+
+	@Override
+	public boolean isLineSegment() {
+		return false;
+	}
+
+	@Override
+	public List<Point> getPoints() {
+		List<Point> result = new ArrayList<Point>();
+		result.add(this);
+		return result;
 	}
 }
