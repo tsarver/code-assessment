@@ -1,0 +1,24 @@
+-------------------------------------------------------------------------------
+Test set: com.fixtufproblems.rectangles.RectangleTest
+-------------------------------------------------------------------------------
+Tests run: 7, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.02 s <<< FAILURE! - in com.fixtufproblems.rectangles.RectangleTest
+testIntersect_UpperRight(com.fixtufproblems.rectangles.RectangleTest)  Time elapsed: 0.002 s  <<< FAILURE!
+java.lang.AssertionError: UpperRight Intersect: The Point at position 0 doesn't match expected. expected:<[6, 12]> but was:<[6, 8]>
+	at com.fixtufproblems.rectangles.RectangleTest.compareOrderedPoints(RectangleTest.java:210)
+	at com.fixtufproblems.rectangles.RectangleTest.testIntersect_UpperRight(RectangleTest.java:79)
+
+testIntersect_OutsideTheBox(com.fixtufproblems.rectangles.RectangleTest)  Time elapsed: 0 s  <<< FAILURE!
+java.lang.AssertionError: OutsideTheBox Intersect: The Point at position 0 doesn't match expected. expected:<[2, 4]> but was:<[4, 2]>
+	at com.fixtufproblems.rectangles.RectangleTest.compareOrderedPoints(RectangleTest.java:210)
+	at com.fixtufproblems.rectangles.RectangleTest.testIntersect_OutsideTheBox(RectangleTest.java:98)
+
+testIntersect_LowerLeft(com.fixtufproblems.rectangles.RectangleTest)  Time elapsed: 0.001 s  <<< FAILURE!
+java.lang.AssertionError: LowerLeft Intersect: The Point at position 0 doesn't match expected. expected:<[9, 8]> but was:<[6, 12]>
+	at com.fixtufproblems.rectangles.RectangleTest.compareOrderedPoints(RectangleTest.java:210)
+	at com.fixtufproblems.rectangles.RectangleTest.testIntersect_LowerLeft(RectangleTest.java:125)
+
+testIntersect_UpperLeft(com.fixtufproblems.rectangles.RectangleTest)  Time elapsed: 0.008 s  <<< FAILURE!
+java.lang.AssertionError: UpperLeft Intersect: The Point at position 0 doesn't match expected. expected:<[8, 6]> but was:<[6, 8]>
+	at com.fixtufproblems.rectangles.RectangleTest.compareOrderedPoints(RectangleTest.java:210)
+	at com.fixtufproblems.rectangles.RectangleTest.testIntersect_UpperLeft(RectangleTest.java:62)
+
